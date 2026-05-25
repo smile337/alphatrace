@@ -1,0 +1,237 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlanId {
+  free
+  pro
+  elite
+  kol_room
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  cancelled
+}
+
+enum PaymentStatus {
+  pending
+  paid
+  refunded
+  revoked
+}
+
+enum ReferralKind {
+  personal
+  kol
+}
+
+enum RewardStatus {
+  pending
+  granted
+  revoked
+  blocked
+}
+
+enum TradeIntentStatus {
+  needs_user_confirmation
+  ready_for_signature
+  blocked_by_risk
+  submitted
+  succeeded
+  failed
+}
+
+model User {
+  id              String    @id @default(cuid())
+  telegramId      BigInt    @unique
+  username        String?
+  firstName       String?
+  deviceHash      String?
+  walletAddress   String?
+  riskReviewFlag  Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  subscriptions   Subscription[]
+  referralCodes   ReferralCode[]
+  invitedBy       ReferralAttribution? @relation("InvitedUser")
+  invitedUsers    ReferralAttribution[] @relation("Inviter")
+  rewards         ReferralReward[]
+  watches         WalletWatch[]
+  copyRules       CopyRule[]
+  payments        Payment[]
+  shareCards      ShareCard[]
+  kolRooms        KolRoom[]
+}
+
+model Subscription {
+  id          String             @id @default(cuid())
+  userId      String
+  planId      PlanId
+  status      SubscriptionStatus @default(active)
+  startedAt   DateTime           @default(now())
+  expiresAt   DateTime
+  createdAt   DateTime           @default(now())
+
+  user        User               @relation(fields: [userId], references: [id])
+}
+
+model ReferralCode {
+  id          String       @id @default(cuid())
+  userId      String
+  kind        ReferralKind
+  code        String       @unique
+  startParam  String       @unique
+  createdAt   DateTime     @default(now())
+
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model ReferralAttribution {
+  id             String   @id @default(cuid())
+  invitedUserId  String   @unique
+  inviterUserId  String
+  referralCode   String
+  isKol          Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  invitedUser    User     @relation("InvitedUser", fields: [invitedUserId], references: [id])
+  inviter        User     @relation("Inviter", fields: [inviterUserId], references: [id])
+}
+
+model ReferralReward {
+  id          String       @id @default(cuid())
+  userId      String
+  type        String
+  amount      Int
+  reason      String
+  status      RewardStatus @default(pending)
+  createdAt   DateTime     @default(now())
+  grantedAt   DateTime?
+
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model KolRoom {
+  id                String   @id @default(cuid())
+  ownerUserId       String
+  title             String
+  telegramChatId    BigInt?
+  subscriptionBps   Int      @default(2000)
+  tradeFeeBps       Int      @default(1500)
+  createdAt         DateTime @default(now())
+
+  owner             User     @relation(fields: [ownerUserId], references: [id])
+  groupInstalls     GroupInstall[]
+}
+
+model GroupInstall {
+  id              String   @id @default(cuid())
+  kolRoomId       String?
+  telegramChatId  BigInt   @unique
+  title           String?
+  installedById   String?
+  createdAt       DateTime @default(now())
+
+  kolRoom         KolRoom? @relation(fields: [kolRoomId], references: [id])
+}
+
+model ShareCard {
+  id          String   @id @default(cuid())
+  userId      String
+  cardType    String
+  inviteLink  String
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model SmartWallet {
+  id                  String   @id @default(cuid())
+  address             String   @unique
+  chain               String   @default("solana")
+  score               Int
+  winRate             Float
+  realizedPnl30dUsd   Float
+  maxDrawdown30d      Float
+  riskLabel           String
+  performance          Json?
+  updatedAt           DateTime @updatedAt
+
+  watches             WalletWatch[]
+  copyRules           CopyRule[]
+}
+
+model WalletWatch {
+  id             String      @id @default(cuid())
+  userId         String
+  smartWalletId  String
+  realtime       Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+
+  user           User        @relation(fields: [userId], references: [id])
+  smartWallet    SmartWallet @relation(fields: [smartWalletId], references: [id])
+
+  @@unique([userId, smartWalletId])
+}
+
+model CopyRule {
+  id                 String      @id @default(cuid())
+  userId             String
+  smartWalletId      String
+  maxSingleTradeUsd  Float
+  maxDailyLossUsd    Float
+  maxSlippageBps     Int
+  blacklist          String[]
+  emergencyPaused    Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  user               User        @relation(fields: [userId], references: [id])
+  smartWallet        SmartWallet @relation(fields: [smartWalletId], references: [id])
+  tradeIntents       TradeIntent[]
+
+  @@unique([userId, smartWalletId])
+}
+
+model TradeIntent {
+  id             String            @id @default(cuid())
+  userId         String
+  copyRuleId     String?
+  tokenMint      String
+  inputMint      String
+  outputMint     String
+  amount         String
+  amountUsd      Float
+  status         TradeIntentStatus
+  riskReasons    String[]
+  jupiterRequestId String?
+  signature      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  copyRule       CopyRule?         @relation(fields: [copyRuleId], references: [id])
+}
+
+model Payment {
+  id                       String        @id @default(cuid())
+  userId                   String
+  planId                   PlanId
+  amountStars              Int
+  status                   PaymentStatus @default(pending)
+  telegramPaymentChargeId  String?       @unique
+  createdAt                DateTime      @default(now())
+  paidAt                   DateTime?
+  refundedAt               DateTime?
+
+  user                     User          @relation(fields: [userId], references: [id])
+}

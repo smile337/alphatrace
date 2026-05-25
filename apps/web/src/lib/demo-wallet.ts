@@ -1,0 +1,1 @@
+export const DEMO_TAKER_PUBLIC_KEY = "HhNPPxwsX8mEq8QTexKSG7ChfG3L59QaFjJC6oFqL1uV";

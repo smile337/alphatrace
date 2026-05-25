@@ -1,0 +1,16 @@
+{
+  "name": "@alphatrace/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "@alphatrace/shared": "file:../../packages/shared",
+    "@solana/web3.js": "^1.98.4",
+    "lucide-react": "^0.511.0"
+  }
+}

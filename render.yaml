@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: alphatrace-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate --schema packages/db/prisma/schema.prisma
+    startCommand: npm run start --workspace @alphatrace/api
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        value: AlphaTraceBot
+      - key: MINI_APP_URL
+        sync: false
+      - key: JUPITER_API_KEY
+        sync: false
+      - key: JUPITER_BASE_URL
+        value: https://api.jup.ag/swap/v2
+      - key: HELIUS_API_KEY
+        sync: false
+      - key: HELIUS_BASE_URL
+        value: https://api-mainnet.helius-rpc.com
+      - key: PRISMA_CLIENT_ENGINE_TYPE
+        value: binary
+      - key: PRISMA_CLI_QUERY_ENGINE_TYPE
+        value: binary
