@@ -9,3 +9,4 @@ coverage/
 output/
 test-results/
 tools/
+neon-init.sql
