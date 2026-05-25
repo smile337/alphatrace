@@ -11,6 +11,9 @@
   "dependencies": {
     "@alphatrace/shared": "file:../../packages/shared",
     "@solana/web3.js": "^1.98.4",
-    "lucide-react": "^0.511.0"
+    "lucide-react": "^0.511.0",
+    "next": "^15.5.18",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
   }
 }
