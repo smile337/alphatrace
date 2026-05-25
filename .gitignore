@@ -10,3 +10,5 @@ output/
 test-results/
 tools/
 neon-init.sql
+
+.vercel
