@@ -1,6 +1,5 @@
 {
   "installCommand": "npm install",
   "buildCommand": "npm run build --workspace @alphatrace/web",
-  "outputDirectory": "apps/web/.next",
   "framework": "nextjs"
 }
