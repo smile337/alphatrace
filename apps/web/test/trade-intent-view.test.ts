@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clearFailedTradeIntentContext, describeTradeIntentButtonLabel } from "../src/lib/trade-intent-view";
+import { clearFailedTradeIntentContext, describeTradeIntentBlocker, describeTradeIntentButtonLabel } from "../src/lib/trade-intent-view";
 
 describe("Mini App trade intent view state", () => {
   it("uses explicit action labels for each trade intent status", () => {
@@ -23,5 +23,43 @@ describe("Mini App trade intent view state", () => {
       transaction: null,
       signature: null
     });
+  });
+
+  it("explains why a trade action is blocked instead of leaving the button inert", () => {
+    expect(
+      describeTradeIntentBlocker({
+        permissionAllowed: false,
+        permissionMessage: "Pro 解锁跟单确认，Elite 解锁自动跟单",
+        walletPublicKey: null,
+        walletConnectAvailable: false
+      })
+    ).toBe("Pro 解锁跟单确认，Elite 解锁自动跟单");
+
+    expect(
+      describeTradeIntentBlocker({
+        permissionAllowed: true,
+        permissionMessage: "当前计划支持确认后跟单",
+        walletPublicKey: null,
+        walletConnectAvailable: false
+      })
+    ).toBe("当前环境没有检测到可签名的钱包。请在支持 Solana 钱包的浏览器/移动端打开，或接入 AlphaTrace 钱包桥。");
+
+    expect(
+      describeTradeIntentBlocker({
+        permissionAllowed: true,
+        permissionMessage: "当前计划支持确认后跟单",
+        walletPublicKey: null,
+        walletConnectAvailable: true
+      })
+    ).toBe("请先连接钱包，再生成待签名交易。");
+
+    expect(
+      describeTradeIntentBlocker({
+        permissionAllowed: true,
+        permissionMessage: "当前计划支持确认后跟单",
+        walletPublicKey: "wallet_public_key",
+        walletConnectAvailable: false
+      })
+    ).toBeNull();
   });
 });

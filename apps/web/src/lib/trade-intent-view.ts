@@ -6,6 +6,13 @@ export interface TradeIntentExecutionContext {
   signature: string | null;
 }
 
+export interface TradeIntentBlockerInput {
+  permissionAllowed: boolean;
+  permissionMessage: string;
+  walletPublicKey: string | null;
+  walletConnectAvailable: boolean;
+}
+
 export function describeTradeIntentButtonLabel(status: TradeIntentPanelStatus): string {
   switch (status) {
     case "creating":
@@ -29,4 +36,11 @@ export function clearFailedTradeIntentContext(_context: TradeIntentExecutionCont
     transaction: null,
     signature: null
   };
+}
+
+export function describeTradeIntentBlocker(input: TradeIntentBlockerInput): string | null {
+  if (!input.permissionAllowed) return input.permissionMessage;
+  if (input.walletPublicKey) return null;
+  if (input.walletConnectAvailable) return "请先连接钱包，再生成待签名交易。";
+  return "当前环境没有检测到可签名的钱包。请在支持 Solana 钱包的浏览器/移动端打开，或接入 AlphaTrace 钱包桥。";
 }

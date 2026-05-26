@@ -8,7 +8,12 @@ import { authenticateTelegramWebApp, readTelegramInitData } from "../lib/telegra
 import { describeTradeIntentExecuteFailure } from "../lib/trade-intent-errors";
 import { createTradeIntent, createTradeIntentOrder, executeTradeIntent } from "../lib/trade-intent-actions";
 import { runTradeIntentExecution } from "../lib/trade-intent-execution";
-import { clearFailedTradeIntentContext, describeTradeIntentButtonLabel, type TradeIntentPanelStatus } from "../lib/trade-intent-view";
+import {
+  clearFailedTradeIntentContext,
+  describeTradeIntentBlocker,
+  describeTradeIntentButtonLabel,
+  type TradeIntentPanelStatus
+} from "../lib/trade-intent-view";
 import { describeTradePermission } from "../lib/plan-permissions";
 import {
   connectWalletSigningSource,
@@ -70,7 +75,19 @@ export function TradeIntentPanel(props: { smartWallet: WalletViewModel; plan: Su
 
   async function handleCreateOrder() {
     if (status === "creating" || status === "executing") return;
-    if (!permission.allowed || !walletPublicKey) return;
+    const blocker = describeTradeIntentBlocker({
+      permissionAllowed: permission.allowed,
+      permissionMessage: permission.message,
+      walletPublicKey,
+      walletConnectAvailable
+    });
+    if (blocker) {
+      setFailureReason(blocker);
+      setStatus("failed");
+      return;
+    }
+    if (!walletPublicKey) return;
+    const taker = walletPublicKey;
     setStatus("creating");
     setIntentId(null);
     setRequestId(null);
@@ -99,7 +116,7 @@ export function TradeIntentPanel(props: { smartWallet: WalletViewModel; plan: Su
     const orderResult = await createTradeIntentOrder({
       intentId: intentResult.intent.id,
       planId: props.plan.id,
-      taker: walletPublicKey
+      taker
     });
 
     if (!orderResult.ok) {
@@ -212,7 +229,7 @@ export function TradeIntentPanel(props: { smartWallet: WalletViewModel; plan: Su
           ) : null}
           <button
             className={`trade-button ${status}`}
-            disabled={status === "creating" || status === "executing" || status === "succeeded" || !permission.allowed || !walletPublicKey}
+            disabled={status === "creating" || status === "executing" || status === "succeeded"}
             onClick={status === "ready" ? handleExecute : handleCreateOrder}
             type="button"
           >
