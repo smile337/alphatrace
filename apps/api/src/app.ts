@@ -48,6 +48,7 @@ export interface ApiConfig {
   jupiter: JupiterClient;
   smartWalletAnalyzer?: SmartWalletAnalyzer;
   store?: ApiStore;
+  telegramWebhookHandler?: (update: unknown) => Promise<void> | void;
 }
 
 export interface SmartWalletAnalyzer {
@@ -681,7 +682,10 @@ export function buildApi(config: ApiConfig): FastifyInstance {
     return { result };
   });
 
-  app.post("/api/telegram/webhook", async () => ({ ok: true }));
+  app.post("/api/telegram/webhook", async (request) => {
+    await config.telegramWebhookHandler?.(request.body);
+    return { ok: true };
+  });
 
   return app;
 }

@@ -757,6 +757,39 @@ describe("AlphaTrace API", () => {
     expect(executeCalls).toBe(1);
   });
 
+  it("passes Telegram webhook updates to the configured bot handler", async () => {
+    const updates: unknown[] = [];
+    const app = buildApi({
+      botToken: "123456:abc",
+      botUsername: "AlphaTraceBot",
+      store: createMemoryStoreForTest(),
+      telegramWebhookHandler: async (update) => {
+        updates.push(update);
+      },
+      jupiter: {
+        order: async () => ({
+          requestId: "req_1",
+          transaction: "tx_1",
+          outAmount: "1000",
+          feeBps: 75,
+          feeMint: "So11111111111111111111111111111111111111112"
+        }),
+        execute: async () => ({ status: "Success", signature: "sig_1", code: 0 })
+      }
+    });
+    const update = { update_id: 1, message: { message_id: 2, text: "/start" } };
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/telegram/webhook",
+      payload: update
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ ok: true });
+    expect(updates).toEqual([update]);
+  });
+
   it("rejects duplicate trade intent execution while the first submit is in flight", async () => {
     const store = createMemoryStoreForTest();
     const demoOrder = createDemoJupiterOrder({
