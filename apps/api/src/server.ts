@@ -27,7 +27,9 @@ if (telegramBot && webhookBaseUrl) {
   const webhookUrl = new URL("/api/telegram/webhook", webhookBaseUrl).toString();
   try {
     await configureAlphaTraceBot(telegramBot, miniAppUrl);
-    await telegramBot.telegram.setWebhook(webhookUrl);
+    await telegramBot.telegram.setWebhook(webhookUrl, {
+      allowed_updates: ["message", "pre_checkout_query"]
+    });
     console.log(`AlphaTrace Telegram webhook configured at ${webhookUrl}`);
   } catch (error) {
     const reason = error instanceof Error ? error.message.replace(botToken, "[redacted-token]") : "unknown error";
