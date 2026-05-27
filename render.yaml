@@ -14,7 +14,7 @@ services:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
       - key: TELEGRAM_BOT_USERNAME
-        value: AlphaTraceBot
+        value: Alpha1TraceBot
       - key: MINI_APP_URL
         sync: false
       - key: JUPITER_API_KEY
@@ -25,6 +25,25 @@ services:
         sync: false
       - key: HELIUS_BASE_URL
         value: https://api-mainnet.helius-rpc.com
+      - key: PRISMA_CLIENT_ENGINE_TYPE
+        value: binary
+      - key: PRISMA_CLI_QUERY_ENGINE_TYPE
+        value: binary
+  - type: worker
+    name: alphatrace-bot
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate --schema packages/db/prisma/schema.prisma
+    startCommand: npm run start --workspace @alphatrace/bot
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_BOT_USERNAME
+        value: Alpha1TraceBot
+      - key: MINI_APP_URL
+        sync: false
       - key: PRISMA_CLIENT_ENGINE_TYPE
         value: binary
       - key: PRISMA_CLI_QUERY_ENGINE_TYPE

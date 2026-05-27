@@ -5,13 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts",
     "build": "tsc -p ../../tsconfig.json --noEmit"
   },
   "dependencies": {
     "@alphatrace/db": "file:../../packages/db",
-    "@alphatrace/shared": "file:../../packages/shared"
-  },
-  "devDependencies": {
+    "@alphatrace/shared": "file:../../packages/shared",
     "tsx": "^4.19.4"
   }
 }
